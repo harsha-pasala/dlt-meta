@@ -16,6 +16,22 @@ class PipelineReaders:
     """
 
     @staticmethod
+    def flatten_df(df):
+        flat_cols = [c[0] for c in df.dtypes if c[1][:6] != 'struct']
+        nested_cols = [c[0] for c in df.dtypes if c[1][:6] == 'struct']
+        
+        # Select flat columns and flatten nested structures
+        flat_df = df.select(flat_cols + [
+            col(nc+'.'+c).alias(nc+'_'+c)
+            for nc in nested_cols
+            for c in df.select(nc+'.*').columns
+        ])
+        # Recursively process nested structures
+        for nc in nested_cols:
+            flat_df = PipelineReaders.flatten_df(flat_df.drop(nc))
+        return flat_df
+
+    @staticmethod
     def read_dlt_cloud_files(spark, bronze_dataflow_spec, schema_json) -> DataFrame:
         """Read dlt cloud files.
 
@@ -33,18 +49,19 @@ class PipelineReaders:
 
         if schema_json and bronze_dataflow_spec.sourceFormat.lower() != "delta":
             schema = StructType.fromJson(schema_json)
-            return (
-                spark.readStream.format(bronze_dataflow_spec.sourceFormat)
-                .options(**reader_config_options)
-                .schema(schema)
+            df = spark.readStream.format(bronze_dataflow_spec.sourceFormat)\
+                .options(**reader_config_options)\
+                .schema(schema)\
                 .load(source_path)
-            )
         else:
-            return (
-                spark.readStream.format(bronze_dataflow_spec.sourceFormat)
-                .options(**reader_config_options)
+            df = spark.readStream.format(bronze_dataflow_spec.sourceFormat)\
+                .options(**reader_config_options)\
                 .load(source_path)
-            )
+        
+        if reader_config_options.get("dltMeta.flattenJson", "").lower() == "true":
+            return PipelineReaders.flatten_df(df)
+        else:
+            return df
 
     @staticmethod
     def read_dlt_delta(spark, bronze_dataflow_spec) -> DataFrame:
