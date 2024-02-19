@@ -15,8 +15,6 @@
          "cloudFiles.format": "json",
          "cloudFiles.inferColumnTypes": "true",
          "cloudFiles.rescuedDataColumn": "_rescued_data",
-         "multiline": "true",
-         "header": "true",
          "dltMeta.flattenJson": "true"
       }
    }
