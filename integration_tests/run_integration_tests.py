@@ -830,9 +830,9 @@ class DLTMETARunner:
                                 uc_catalog_name=runner_conf.uc_catalog_name,
                                 silver_schema=runner_conf.silver_schema
                             )
-
-        with open(runner_conf.onboarding_fanout_file_path, "w") as onboarding_file:
-            json.dump(onboard_obj, onboarding_file)
+        if runner_conf.onboarding_fanout_file_path:
+            with open(runner_conf.onboarding_fanout_file_path, "w") as onboarding_file:
+                json.dump(onboard_obj, onboarding_file)
 
     def __populate_source_details(self, runner_conf, data_flow, key, value):
         if key == "source_details":
