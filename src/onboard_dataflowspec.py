@@ -706,6 +706,8 @@ class OnboardDataflowspec:
             "partitionColumns",
             "cdcApplyChanges",
             "dataQualityExpectations",
+            "quarantineTargetDetails",
+            "quarantineTableProperties",
             "appendFlows",
             "appendFlowsSchemas"
         ]
@@ -726,6 +728,8 @@ class OnboardDataflowspec:
                 StructField("partitionColumns", ArrayType(StringType(), True), True),
                 StructField("cdcApplyChanges", StringType(), True),
                 StructField("dataQualityExpectations", StringType(), True),
+                StructField("quarantineTargetDetails", MapType(StringType(), StringType(), True), True),
+                StructField("quarantineTableProperties", MapType(StringType(), StringType(), True), True),
                 StructField("appendFlows", StringType(), True),
                 StructField("appendFlowsSchemas", MapType(StringType(), StringType(), True), True)
             ]
@@ -776,11 +780,34 @@ class OnboardDataflowspec:
                 if self.onboard_file_type == "json":
                     silver_cdc_apply_changes = json.dumps(self.__delete_none(silver_cdc_apply_changes_row.asDict()))
             data_quality_expectations = None
+            quarantine_target_details = {}
+            quarantine_table_properties = {}
             if f"silver_data_quality_expectations_json_{env}" in onboarding_row:
                 silver_data_quality_expectations_json = onboarding_row[f"silver_data_quality_expectations_json_{env}"]
                 if silver_data_quality_expectations_json:
                     data_quality_expectations = (
                         self.__get_data_quality_expecations(silver_data_quality_expectations_json))
+                    if "silver_quarantine_table" in onboarding_row and onboarding_row["silver_quarantine_table"]:
+                        quarantine_table_partition_columns = ""
+                        if (
+                            "silver_quarantine_table_partitions" in onboarding_row
+                            and onboarding_row["silver_quarantine_table_partitions"]
+                        ):
+                            quarantine_table_partition_columns = onboarding_row["silver_quarantine_table_partitions"]
+                        quarantine_target_details = {
+                            "database": onboarding_row[f"silver_database_quarantine_{env}"],
+                            "table": onboarding_row["silver_quarantine_table"],
+                            "partition_columns": quarantine_table_partition_columns,
+                        }
+                        if not self.uc_enabled:
+                            quarantine_target_details["path"] = onboarding_row[
+                                f"silver_quarantine_table_path_{env}"]
+                        if (
+                            "silver_quarantine_table_properties" in onboarding_row
+                            and onboarding_row["silver_quarantine_table_properties"]
+                        ):
+                            quarantine_table_properties = self.__delete_none(
+                                onboarding_row["silver_quarantine_table_properties"].asDict())
             append_flows, append_flow_schemas = self.get_append_flows_json(onboarding_row, layer="silver", env=env)
             silver_row = (
                 silver_data_flow_spec_id,
@@ -794,6 +821,8 @@ class OnboardDataflowspec:
                 silver_parition_columns,
                 silver_cdc_apply_changes,
                 data_quality_expectations,
+                quarantine_target_details,
+                quarantine_table_properties,
                 append_flows,
                 append_flow_schemas
             )

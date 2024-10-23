@@ -58,6 +58,8 @@ class SilverDataflowSpec:
     partitionColumns: list
     cdcApplyChanges: str
     dataQualityExpectations: str
+    quarantineTargetDetails: map
+    quarantineTableProperties: map
     appendFlows: str
     appendFlowsSchemas: map
     version: str
