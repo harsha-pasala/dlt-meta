@@ -473,7 +473,13 @@ class OnboardDataflowspec:
 
             partition_columns = [""]
             if "bronze_partition_columns" in onboarding_row and onboarding_row["bronze_partition_columns"]:
-                partition_columns = [onboarding_row["bronze_partition_columns"]]
+                # Check if this is a list separated by commas
+                if "," in onboarding_row["bronze_partition_columns"]:
+                    # Split into a list if it does
+                    partition_columns = onboarding_row["bronze_partition_columns"].split(",")
+                else:
+                    # Wrap it in a list if it's a single value
+                    partition_columns = [onboarding_row["bronze_partition_columns"]]
 
             cdc_apply_changes = None
             if "bronze_cdc_apply_changes" in onboarding_row and onboarding_row["bronze_cdc_apply_changes"]:
@@ -493,7 +499,11 @@ class OnboardDataflowspec:
                             "bronze_quarantine_table_partitions" in onboarding_row
                             and onboarding_row["bronze_quarantine_table_partitions"]
                         ):
-                            quarantine_table_partition_columns = onboarding_row["bronze_quarantine_table_partitions"]
+                            if "," in onboarding_row["bronze_quarantine_table_partitions"]:
+                                quarantine_table_partition_columns = onboarding_row["bronze_quarantine_table_partitions"].split(",")
+                            else:
+                                quarantine_table_partition_columns = [onboarding_row["bronze_quarantine_table_partitions"]]
+    
                         quarantine_target_details = {
                             "database": onboarding_row[f"bronze_database_quarantine_{env}"],
                             "table": onboarding_row["bronze_quarantine_table"],
@@ -767,7 +777,10 @@ class OnboardDataflowspec:
 
             silver_parition_columns = [""]
             if "silver_partition_columns" in onboarding_row and onboarding_row["silver_partition_columns"]:
-                silver_parition_columns = [onboarding_row["silver_partition_columns"]]
+                if "," in onboarding_row["silver_partition_columns"]:
+                    silver_parition_columns = onboarding_row["silver_partition_columns"].split(",")
+                else:
+                    silver_parition_columns = [onboarding_row["silver_partition_columns"]]
 
             silver_cdc_apply_changes = None
             if "silver_cdc_apply_changes" in onboarding_row and onboarding_row["silver_cdc_apply_changes"]:
