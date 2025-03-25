@@ -30,7 +30,7 @@ setup(
     description="DLT-META Framework",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(include=["src", "integration_tests"]),
+    packages=find_packages(include=["src", "integration_tests", "dltmeta", "dltmeta.*"]),
     entry_points={"group_1": "run=src.__main__:main"},
     classifiers=[
         "Programming Language :: Python :: 3",
